@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI Disease Detection (Prototype)</title>
+  <style>
+    :root{
+  --bg:#0f172a;
+  --fg:#e2e8f0;
+  --muted:#94a3b8;
+  --card:#111827;
+  --accent:#22d3ee;
+  --danger:#ef4444;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+html,body{
+  margin:0;
+  padding:0;
+  background:var(--bg);
+  color:var(--fg);
+  font-family:system-ui,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;
+}
+
+/* HEADER */
+header{
+  padding:2rem 1rem;
+  text-align:center;
+  border-bottom:1px solid #1f2937;
+}
+
+header h1{
+  margin:0;
+  font-size:1.7rem;
+}
+
+header .disclaimer{
+  color:var(--muted);
+  margin-top:0.5rem;
+  font-size:0.9rem;
+}
+
+/* MAIN LAYOUT */
+main{
+  max-width:1000px;
+  margin:2rem auto;
+  padding:0 1rem;
+}
+
+/* CARD */
+.card{
+  background:var(--card);
+  border:1px solid #1f2937;
+  border-radius:12px;
+  padding:1rem;
+  margin-bottom:1.5rem;
+}
+
+/* LABELS */
+label{
+  display:block;
+  margin:.5rem 0 .25rem;
+  color:#cbd5e1;
+  font-size:0.95rem;
+}
+
+/* INPUTS */
+input[type="file"],
+input[type="number"],
+select,
+textarea{
+  width:100%;
+  padding:.6rem .7rem;
+  border-radius:8px;
+  border:1px solid #334155;
+  background:#0b1220;
+  color:var(--fg);
+}
+
+textarea{
+  resize:vertical;
+}
+
+/* BUTTON */
+button{
+  background:var(--accent);
+  color:#062329;
+  border:none;
+  padding:.7rem 1.1rem;
+  border-radius:8px;
+  font-weight:600;
+  cursor:pointer;
+  margin-top:1rem;
+}
+
+button:disabled{
+  opacity:.6;
+  cursor:not-allowed;
+}
+
+/* GRID LAYOUT */
+.grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:1rem;
+}
+
+.grid-2{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:.5rem;
+}
+
+.grid-3{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap:.5rem;
+  margin:.4rem 0;
+}
+
+/* ✅ IMAGE PREVIEW BOX */
+.preview{
+  margin-top:.5rem;
+  border:1px dashed #334155;
+  padding:.5rem;
+  min-height:220px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#0b1220;
+}
+
+.preview img{
+  max-width:100%;
+  max-height:220px;
+  border-radius:8px;
+  object-fit:contain;
+}
+
+/* RESULT GRID */
+.result-grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:1rem;
+  align-items:start;
+}
+
+/* RESULT TEXT */
+.score{
+  font-size:1.3rem;
+  margin:.5rem 0;
+}
+
+.label{
+  font-size:1.1rem;
+  color:#cbd5e1;
+}
+
+.meta{
+  color:var(--muted);
+  font-size:.9rem;
+  margin-top:.5rem;
+  white-space:pre-line;
+}
+
+/* FOOTER */
+footer{
+  text-align:center;
+  color:var(--muted);
+  margin:2rem 0;
+  font-size:.9rem;
+}
+
+/* ✅ RESPONSIVE */
+@media (max-width: 800px){
+  .grid, .result-grid{
+    grid-template-columns: 1fr;
+  }
+}
+
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>AI-Powered Early Disease Detection (Prototype)</h1>
+    <p class="disclaimer">Engineering demo only. Not for clinical use.</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Upload medical image</h2>
+
+      <form id="predict-form">
+        <div class="grid">
+
+          <!-- ✅ LEFT SIDE -->
+          <div>
+            <label for="image">Image (X-ray / Skin / Retina)</label>
+            <input id="image" name="image" type="file" accept="image/*" required />
+
+            <!-- ✅ Preview Box (Correct Location) -->
+            <div id="preview" class="preview"></div>
+          </div>
+
+          <!-- ✅ RIGHT SIDE -->
+          <div>
+            <label>EHR / Symptoms (optional)</label>
+
+            <div class="grid-2">
+              <div>
+                <label for="age">Age</label>
+                <input id="age" name="age" type="number" min="0" max="120" />
+              </div>
+
+              <div>
+                <label for="sex">Sex</label>
+                <select id="sex" name="sex">
+                  <option value="">-</option>
+                  <option value="female">Female</option>
+                  <option value="male">Male</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid-3">
+              <label><input type="checkbox" name="fever" value="true" /> Fever</label>
+              <label><input type="checkbox" name="cough" value="true" /> Cough</label>
+              <label><input type="checkbox" name="diabetes" value="true" /> Diabetes</label>
+            </div>
+
+            <label for="symptoms">Symptoms (free text)</label>
+            <textarea id="symptoms" name="symptoms" rows="3"
+              placeholder="e.g., shortness of breath, chest pain"></textarea>
+          </div>
+        </div>
+
+        <button type="submit">Predict</button>
+      </form>
+    </section>
+
+    <section class="card" id="results" hidden>
+      <h2>Result</h2>
+
+      <div class="result-grid">
+        <div>
+          <div class="score" id="score">Score: -</div>
+          <div class="label" id="label">Label: -</div>
+          <div class="meta" id="meta"></div>
+        </div>
+
+        <div>
+          <h3>Heatmap</h3>
+          <img id="heatmap" alt="Grad-CAM heatmap" />
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Based on multi-modal AI concept with OpenCV preprocessing and ONNX inference.</p>
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>
