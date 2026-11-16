@@ -1,60 +1,93 @@
-# AI-Powered Early Disease Detection (Node.js prototype)
+# AI-Powered Early Disease Detection
 
-Engineering demo of a multi-modal disease detection system using Node.js (Express) for API + HTML/CSS/JS frontend. It supports:
-- Image upload (X-ray / skin lesion / retina)
-- Optional EHR/symptom fields
-- OpenCV-based preprocessing if available
-- TensorFlow.js model inference if a model is provided; otherwise a deterministic stub
-- Heatmap placeholder (simulates Grad-CAM overlay)
-- JSONL audit logging
+A Node.js and Express prototype exploring an image-assisted disease screening workflow. The demo accepts medical images and optional symptom or EHR context, then returns a structured prediction response.
 
-Important: Not for clinical use.
+> [!WARNING]
+> **Research prototype only — not for clinical use.** This project is not a medical device and must not be used to diagnose, treat, or rule out disease. Outputs may be simulated when a trained model is not configured. Always consult a qualified healthcare professional.
+
+## Capabilities
+
+- Image upload for supported demonstration inputs (for example, X-ray, skin, or retina images).
+- Optional symptom and EHR context.
+- Image preprocessing with OpenCV when the optional native dependency is available.
+- TensorFlow.js inference when model artifacts are configured; otherwise, a deterministic fallback is used.
+- Placeholder heatmap output for UI and API integration testing.
+- JSONL audit logging.
+
+## Technology
+
+- Node.js 18+
+- Express
+- TensorFlow.js Node (optional)
+- OpenCV integration (optional)
+- HTML, CSS, and JavaScript frontend
 
 ## Requirements
-- Node.js >= 18
-- Optional native deps: OpenCV (for `opencv4nodejs`) and TensorFlow C libs (for `@tensorflow/tfjs-node`). If these are missing, the app still runs using fallbacks.
 
-## Install
+- Node.js 18 or later
+- npm
+- Optional native dependencies for accelerated image processing and model inference
+
+## Install and Run
 
 ```bash
 npm install
+npm start
 ```
 
-If you want dev auto-reload:
+For development with automatic reload, if the script is available:
 
 ```bash
 npm run dev
 ```
 
-## Run
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-```bash
-npm start
+## Configure a Model (Optional)
+
+Convert a compatible TensorFlow/Keras model to TensorFlow.js Layers format and place the generated `model.json` and weight shard files in:
+
+```text
+server/inference/model_artifacts/
 ```
 
-Then open http://localhost:3000/
-
-## Provide a real model (optional)
-1. Convert your Keras/TF model to TF.js Layers format (model.json + weights.bin files).
-2. Place them under:
-
-```
-server/inference/model_artifacts/model.json
-server/inference/model_artifacts/group1-shard1of1.bin (or multiple shards)
-```
-
-The server will attempt to load it automatically.
+The expected model file is `model.json`; weight files should remain alongside it. Confirm the loader's expected input shape, preprocessing, and output labels before evaluating a model.
 
 ## API
-- POST /api/predict
-  - multipart/form-data: `image` (file)
-  - form field: `ehr_json` (JSON string for EHR fields)
-  - Response: `{ requestId, score, label, thresholds, calibration, heatmap_base64, meta }`
 
-## Notes
-- The heatmap is a placeholder colored overlay scaled by the predicted score. Replace `server/inference/gradcam.js` with a proper Grad-CAM implementation if your model is available.
-- Preprocessing uses CLAHE on grayscale and resize to 224x224 via OpenCV when available; otherwise uses TF.js image decode + resize.
-- Logging goes to `server/logs/audit.jsonl`.
+### `POST /api/predict`
 
-## Security
-- Basic rate limiting and security headers are enabled. Do not expose this prototype directly to the internet without further hardening.
+Send a `multipart/form-data` request containing:
+
+| Field | Type | Description |
+|---|---|---|
+| `image` | File | Input image |
+| `ehr_json` | String (optional) | JSON-encoded context fields |
+
+The prototype response may include a request identifier, score, label, thresholds, calibration metadata, heatmap data, and processing metadata. Treat all outputs as experimental.
+
+## Implementation Notes
+
+- CLAHE and resizing to 224 × 224 are used when the OpenCV preprocessing path is available.
+- The fallback path uses TensorFlow.js image decoding and resizing where supported.
+- The current heatmap is a placeholder overlay, not a validated Grad-CAM explanation.
+- Audit records are written to `server/logs/audit.jsonl`.
+
+## Security and Privacy
+
+Do not upload real patient data to an unreviewed development instance. Before any external deployment, review authentication, authorization, file validation, upload limits, retention, logging, rate limiting, dependency vulnerabilities, and data-protection requirements. Avoid storing identifiable health information in logs.
+
+## Development Roadmap
+
+- Replace fallback predictions with a validated model.
+- Implement a genuine explainability method and verify its outputs.
+- Add automated tests for upload validation and inference behavior.
+- Document model provenance, evaluation datasets, limitations, and intended use.
+
+## Contributing
+
+Submit focused pull requests with test steps and a clear explanation of model or preprocessing changes. Never present unvalidated model results as clinical evidence.
+
+## License
+
+No license is specified in this repository yet.
